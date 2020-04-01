@@ -1,0 +1,20 @@
+Simulation of an epidemic using methods of molecular dynamics
+
+-> Idea to reduce the O(n^2) connected with the calculations of the distances
+	Split the field into fields and add overlaping fields to catch boundary agents.
+	It's only necessary to iterate over the elements inside the own field and the connected overlaping fields, dropping the effects
+	of further distant elemtents. This is only applicable for non long range interactions!
+	This procedure could also be parallised, although the overlaping fields have to be treated with care.
+	This could be done this way:
+	We take a field Fi with elements ai in this field. There are Ni elements in field Fi. The overlaping fields connected are Fi<-j and Fi<-k, with Noj and Nok elements.
+	- First, calculate all the distances d_ji and forces (vectos of size d) inside Fi with d_ji = Sum{Sum{aj - ai, (j, i, Ni + Noi + Nok)}, (i, 0 , Ni)}. The index j also interates over the elemtents
+	  inside the overlaping field, to calculate the forces this particles feel from this part. Note however that index i does not iterate
+	  over the overlaping fields, to avoid read and write access problems with parallelisation. The total force (we use superposition and add the forces) decides the velocity of the particle.
+	- The particle position of the particle is changed and it may change into an overlaping field. In this case it is no longer inside Fi.
+	- After all the fields have been calculated (with can be run parallise), we use the same formular on the overlaping fields and treat them as 
+	  ordinary fields.
+	- This process can be iterated until the desired time or state is reached.
+
+	To simulate infection spreading we use a compulsive force either for social distancing on its own or changing on whether on agent
+	shows simtoms. This is captured using a system of states, changing the compulsing strength and the mass of the agent. A high mass
+	leads to slower movement. We also implement an friction force, to avoid unrealistic bouncing.
