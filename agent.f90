@@ -1,6 +1,9 @@
 #define HEALTHY 1
-#define SICK 2
-#define NO_SYMPTOMS 3
+#define INFECTED 2
+#define INFECTIOUS 3
+#define SICK 4
+#define NO_SYMPTOMS 5
+#define IMMUNE 6
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !   agentTools has all the tools for one agent     !
@@ -19,11 +22,13 @@ module agentTools
     real, parameter :: dragg = -1e-1 !to slow the movement, when changed to a positive value, the movement gets faster
     real :: time_step = 1e1
     real, parameter :: transmission_probability = 1e-1, no_symptoms_probabilty = 2e-2, transmission_radius = 1e0
-    real, parameter, private :: x_max = 100e0, y_max = 100e0
+    real, parameter, public :: x_max = 100e0, y_max = 100e0
+    integer, parameter :: tpd = 24, ticks_before_infectious = 4 * tpd, ticks_before_sick = 8 * tpd, ticks_before_immune = 14 * tpd!tpd ... ticks per day
     type :: agent
         real, dimension(2) :: position
         real, dimension(2) :: velocity
-        integer :: state !1 means not infected
+        integer(KIND=1) :: state !1 means not infected from -127 to 128
+        integer(KIND=2), private :: time_tick = 0
     end type agent
     
     contains
@@ -45,20 +50,55 @@ module agentTools
         a%state = 1
     end subroutine initAgent
     
+    subroutine tick(a) !Probability to die should be implemented here (this could consider an age parameter as well)
+        type(agent) :: a
+        real :: p
+        select case (a%state)
+        case(HEALTHY, IMMUNE)
+            return
+        case(INFECTED)
+            if (a%time_tick > ticks_before_infectious) then
+                call RANDOM_NUMBER(p)
+                if (p < no_symptoms_probabilty) then
+                    a%state = NO_SYMPTOMS
+                else
+                    a%state = INFECTIOUS
+                end if
+                a%time_tick = 0
+                return
+            end if
+        case(INFECTIOUS)
+            if (a%time_tick > ticks_before_sick) then
+                a%state = SICK
+                a%time_tick = 0
+                return
+            end if
+        case(SICK)
+            if (a%time_tick > ticks_before_immune) then
+                a%state = IMMUNE
+                a%time_tick = 0
+                return
+            end if
+        case(NO_SYMPTOMS)
+            if (a%time_tick > ticks_before_immune + ticks_before_sick) then
+                a%state = IMMUNE
+                a%time_tick = 0
+                return
+            end if
+        end select
+        a%time_tick = a%time_tick + 1
+            
+    end subroutine
+    
     subroutine transmission(a1, a2) !iterate over a2, switch a1 and a2 to take care that a2 can be infected too
         real :: p
         type(agent) :: a1, a2 
-        if (a1%state /= HEALTHY .or. a2%state == HEALTHY) return !already infected
+        if (a1%state /= HEALTHY .or. a2%state == HEALTHY .or. a2%state == IMMUNE .or. a2%state == INFECTED) return !already infected or immune
         !Billiardpotential and transmission (if distance is < transmission_radius than the probability of transmission is transmission_probability)
         if (sqrt(sum((a1%position - a2%position)**2)) < transmission_radius) then
             call RANDOM_NUMBER(p)
             if (p < transmission_probability) then !infection occured
-                call RANDOM_NUMBER(p)
-                if (p < no_symptoms_probabilty) then
-                    a1%state = NO_SYMPTOMS
-                else
-                    a1%state = SICK
-                end if
+                a1%state = INFECTED
             end if
         end if
     end subroutine
