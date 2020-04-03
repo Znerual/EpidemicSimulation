@@ -19,17 +19,16 @@ module agentTools
     
     real, parameter, dimension(6) :: coupling = (/ 0e0, 0e0, 0e0, 1e0, 0e0, 0e0 /) !gives the coupling strength depending on the state 
     real, parameter, dimension(6) :: mass = (/ 1e0, 1.5e0, 1.5e0, 1e5, 1.5e0,1e0 /) !to change the movement bevaviour
-    real, parameter :: dragg = -1e-2 !to slow the movement, when changed to a positive value, the movement gets faster
-    real :: time_step = 1e1
+    real, dimension(2) :: dragg = (/-1e-2, -1e-2/) !to slow the movement, when changed to a positive value, the movement gets faster
     integer, parameter :: tpd = 24, ticks_before_infectious = 4 * tpd, ticks_before_sick = 8 * tpd, ticks_before_immune = 14 * tpd!tpd ... ticks per day
     real, parameter :: transmission_probability = 1e-1 /tpd , no_symptoms_probabilty = 2e-2 / tpd, transmission_radius = 1e0
     real, parameter, public :: x_max = 100e0, y_max = 100e0
-    
+    real(KIND=8), parameter, dimension(2), private :: max_speed = (/x_max / 3e0_8, y_max / 3e0_8 /)
     type :: agent
-        real, dimension(2) :: position
-        real, dimension(2) :: velocity
+        real(KIND=8), dimension(2) :: position
+        real(KIND=8), dimension(2) :: velocity =(/0e0, 0e0 /)
         integer(KIND=1) :: state = HEALTHY!1 means not infected from -127 to 128
-        integer(KIND=2), private :: time_tick = 0
+        integer(KIND=2), private :: time_tick = 1
     end type agent
     
     contains
@@ -79,25 +78,25 @@ module agentTools
                 else
                     a%state = INFECTIOUS
                 end if
-                a%time_tick = 0
+                a%time_tick = 1
                 return
             end if
         case(INFECTIOUS)
             if (a%time_tick > ticks_before_sick) then
                 a%state = SICK
-                a%time_tick = 0
+                a%time_tick = 1
                 return
             end if
         case(SICK)
             if (a%time_tick > ticks_before_immune) then
                 a%state = IMMUNE
-                a%time_tick = 0
+                a%time_tick = 1
                 return
             end if
         case(NO_SYMPTOMS)
             if (a%time_tick > ticks_before_immune + ticks_before_sick) then
                 a%state = IMMUNE
-                a%time_tick = 0
+                a%time_tick = 1
                 return
             end if
         end select
@@ -120,16 +119,16 @@ module agentTools
     
     subroutine updatePosition(a, f)
         type(agent) :: a
-        real, dimension(2), intent(in) :: f
-        real, dimension(2) :: pos
-        a%velocity = a%velocity + (f / mass(a%state) + dragg) * time_step
-        pos = a%position + a%velocity * time_step
-        if (pos(1) < 0 &
-            .or. pos(2) < 0 &
-            .or. pos(1) > x_max &
-            .or. pos(2) > y_max) & !To check boundary conditions
-        a%velocity = -a%velocity
-        a%position = a%position + a%velocity * time_step
+        real(KIND=8), dimension(2), intent(in) :: f
+        real(KIND=8), dimension(2) :: pos
+        a%velocity = a%velocity + ((f * 1e0/mass(a%state)) + dragg)
+        if (a%velocity(1) > max_speed(1))  a%velocity(1) = max_speed(1)
+        if (a%velocity(2) > max_speed(2))  a%velocity(2) = max_speed(2)
+        pos = a%position + a%velocity
+        if (pos(1) < 0 .or. pos(1) > x_max) a%velocity(1) = -a%velocity(1)
+        if (pos(2) < 0 .or. pos(2) > y_max) a%velocity(2) = -a%velocity(2)
+        
+        a%position = a%position + a%velocity
     end subroutine updatePosition
     
 end module agentTools
