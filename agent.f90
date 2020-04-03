@@ -17,26 +17,41 @@ module agentTools
     use ifport
     implicit none
     
-    real, parameter, dimension(3) :: coupling = (/ 0e0, 0e0, 1e0 /) !gives the coupling strength depending on the state 
-    real, parameter, dimension(3) :: mass = (/ 1e0, 1.5e0, 1e5 /) !to change the movement bevaviour
-    real, parameter :: dragg = -1e-1 !to slow the movement, when changed to a positive value, the movement gets faster
+    real, parameter, dimension(6) :: coupling = (/ 0e0, 0e0, 0e0, 1e0, 0e0, 0e0 /) !gives the coupling strength depending on the state 
+    real, parameter, dimension(6) :: mass = (/ 1e0, 1.5e0, 1.5e0, 1e5, 1.5e0,1e0 /) !to change the movement bevaviour
+    real, parameter :: dragg = -1e-2 !to slow the movement, when changed to a positive value, the movement gets faster
     real :: time_step = 1e1
-    real, parameter :: transmission_probability = 1e-1, no_symptoms_probabilty = 2e-2, transmission_radius = 1e0
-    real, parameter, public :: x_max = 100e0, y_max = 100e0
     integer, parameter :: tpd = 24, ticks_before_infectious = 4 * tpd, ticks_before_sick = 8 * tpd, ticks_before_immune = 14 * tpd!tpd ... ticks per day
+    real, parameter :: transmission_probability = 1e-1 /tpd , no_symptoms_probabilty = 2e-2 / tpd, transmission_radius = 1e0
+    real, parameter, public :: x_max = 100e0, y_max = 100e0
+    
     type :: agent
         real, dimension(2) :: position
         real, dimension(2) :: velocity
-        integer(KIND=1) :: state !1 means not infected from -127 to 128
+        integer(KIND=1) :: state = HEALTHY!1 means not infected from -127 to 128
         integer(KIND=2), private :: time_tick = 0
     end type agent
     
     contains
+    !Get the definded Markos outside the Module
+    integer(KIND=1) function cHEALTHY() 
+    cHEALTHY = HEALTHY; end function
+    integer(KIND=1) function cINFECTED() 
+    cINFECTED = INFECTED; end function
+    integer(KIND=1) function cINFECTIOUS() 
+    cINFECTIOUS = INFECTIOUS; end function
+    integer(KIND=1) function cSICK() 
+    cSICK = SICK; end function
+    integer(KIND=1) function cNO_SYMPTOMS() 
+    cNO_SYMPTOMS = NO_SYMPTOMS; end function
+    integer(KIND=1) function cIMMUNE() 
+    cIMMUNE = IMMUNE; end function
+    
     function getPairForce(a1, a2) !iterated over a2
         type(agent), intent(in) :: a1
         type(agent), intent(in) :: a2
-        real, dimension(2) :: getPairForce     
-        getPairForce = (a1%position - a2%position) *  coupling(a1%state) * coupling(a2%state) / (abs(a1%position - a2%position)**3)
+        real(KIND=8), dimension(2) :: getPairForce     
+        getPairForce = (a1%position - a2%position) *  (coupling(a1%state) + coupling(a2%state)) / (sqrt(sum((a1%position - a2%position)**2))**4.32193) !This factor comes from the Mathematica Script in the folder
     end function getPairForce
     
     subroutine initAgent(a)
