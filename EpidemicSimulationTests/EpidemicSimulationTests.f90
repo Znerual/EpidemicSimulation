@@ -41,15 +41,15 @@
 
 
     call test_case_create('Agent wurde infiziert - transmission', test_suite_a)
-    a(1)%state = cHEALTHY()
-    a(2)%state = cINFECTIOUS()
+    a(1)%state = HEALTHY
+    a(2)%state = INFECTIOUS
     a(1)%position = (/ 1e0,1e0 /)
     a(2)%position = (/ 1.01e0, 1.01e0 /)
     n = 0
     do i = 0, tpd * 1000
         call transmission(a(1), a(2))
-        if (a(1)%state == cINFECTED()) then
-            a(1)%state = cHEALTHY()
+        if (a(1)%state == INFECTED) then
+            a(1)%state = HEALTHY
             n = n +1
         end if
     end do
@@ -57,36 +57,36 @@
 
 
     call test_case_create("Makro Function test", test_suite_a)
-    call assert_equal(cHEALTHY(), 1_1,  __FILE__, __LINE__, test_suite_a)
-    call assert_equal(cINFECTED(), 2_1,  __FILE__, __LINE__, test_suite_a)
-    call assert_equal(cSICK(), 4_1,  __FILE__, __LINE__, test_suite_a)
+    call assert_equal(HEALTHY, 1_1,  __FILE__, __LINE__, test_suite_a)
+    call assert_equal(INFECTED, 2_1,  __FILE__, __LINE__, test_suite_a)
+    call assert_equal(SICK, 4_1,  __FILE__, __LINE__, test_suite_a)
 
 
     call test_case_create("Force test", test_suite_a)
     a(1)%position = (/ 1e0,1e0 /)
     a(2)%position = (/ 1.01e0, 1.01e0 /)
-    a(1)%state = cHEALTHY()
-    a(2)%state = cINFECTIOUS()
+    a(1)%state = HEALTHY
+    a(2)%state = INFECTIOUS
     call assert_equal(sum((getPairForce(a(1), a(2)))**2), 0e0_8, __FILE__, __LINE__, test_suite_a)
-    a(1)%state = cSICK()
-    a(2)%state = cINFECTIOUS()
+    a(1)%state = SICK
+    a(2)%state = INFECTIOUS
     call assert_great_than(sum((getPairForce(a(1), a(2)))**2), 0e0_8, __FILE__, __LINE__, test_suite_a)
-    a(1)%state = cHEALTHY()
-    a(2)%state = cINFECTIOUS()
+    a(1)%state = HEALTHY
+    a(2)%state = INFECTIOUS
     call assert_equal(sum((getPairForce(a(1), a(2)))**2), 0e0_8, __FILE__, __LINE__, test_suite_a)
     a(1)%position = (/ 1e0,1e0 /)
     a(2)%position = (/ 2e0, 1e0 /)
-    a(1)%state = cSICK()
-    a(2)%state = cHEALTHY()
+    a(1)%state = SICK
+    a(2)%state = HEALTHY
     a(3)%position = (/ 1e0,2e0 /)
     a(4)%position = (/ 1e0, 1e0 /)
-    a(3)%state = cSICK()
-    a(4)%state = cHEALTHY()
+    a(3)%state = SICK
+    a(4)%state = HEALTHY
     call assert_equal(sum((getPairForce(a(1), a(2)))**2), sum((getPairForce(a(3), a(4)))**2), __FILE__, __LINE__, test_suite_a)
     a(1)%position = (/ 1e0,1e0 /)
     a(2)%position = (/ 3e0, 1e0 /)
-    a(1)%state = cSICK()
-    a(2)%state = cHEALTHY()
+    a(1)%state = SICK
+    a(2)%state = HEALTHY
     t1 = sqrt(sum((getPairForce(a(1), a(2))**2)))
     call assert_approximate(t1,1e-1_8, __FILE__, __LINE__,1e-4_8, test_suite_a)
     
@@ -94,32 +94,32 @@
     
     
     call test_case_create("tick test", test_suite_a)
-    a(1)%state = cHEALTHY()
+    a(1)%state = HEALTHY
     do i = 0, 1000
         call tick(a(1))
     end do
-    call assert_equal(a(1)%state, cHEALTHY(), __FILE__, __LINE__, test_suite_a)
-    a(1)%state = cINFECTED()
+    call assert_equal(a(1)%state, HEALTHY, __FILE__, __LINE__, test_suite_a)
+    a(1)%state = INFECTED
     do i = 0, ticks_before_infectious
         call tick(a(1))
     end do
-    call assert_equal(a(1)%state, cINFECTIOUS(), __FILE__, __LINE__, test_suite_a)
+    call assert_equal(a(1)%state, INFECTIOUS, __FILE__, __LINE__, test_suite_a)
     do i = 0, ticks_before_sick
         call tick(a(1))
     end do
-    call assert_equal(a(1)%state, cSICK(), __FILE__, __LINE__, test_suite_a)
+    call assert_equal(a(1)%state, SICK, __FILE__, __LINE__, test_suite_a)
     do i = 0, ticks_before_immune
         call tick(a(1))
     end do
-    call assert_equal(a(1)%state, cIMMUNE(), __FILE__, __LINE__, test_suite_a)
+    call assert_equal(a(1)%state, IMMUNE, __FILE__, __LINE__, test_suite_a)
     n = 0
-    a(1)%state = cINFECTED()
+    a(1)%state = INFECTED
     do i = 0, tpd * 1000
         do j = 0, ticks_before_infectious
         call tick(a(1))
         end do
-        if (a(1)%state == cNO_SYMPTOMS()) then
-            a(1)%state = cINFECTED()
+        if (a(1)%state == NO_SYMPTOMS) then
+            a(1)%state = INFECTED
             n = n +1
         end if
     end do
@@ -141,7 +141,7 @@
     f = (/ 1e0, 0e0 /)
     a(1)%position = (/1e0, 1e0/)
     a(1)%velocity = (/0e0, 0e0 /)
-    a(1)%state = cHEALTHY()
+    a(1)%state = HEALTHY
     n = 0e0
     t1 =0e0
     t2 = 1e0

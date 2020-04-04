@@ -70,6 +70,8 @@
 		<File RelativePath=".\Description.txt"/></Filter>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
 		<File RelativePath=".\agent.f90"/>
-		<File RelativePath=".\EpidemicSimulation.f90"/></Filter>
+		<File RelativePath=".\EpidemicSimulation.f90"/>
+		<File RelativePath=".\konstanten.f90"/>
+		<File RelativePath=".\modell.f90"/></Filter>
 		<File RelativePath=".\ReadMe.txt"/></Files>
 	<Globals/></VisualStudioProject>
