@@ -13,8 +13,33 @@ module agentTools
     use konstanten
     implicit none
     
+    private
+    public agent_init
+    public agent_tick
+    public agent_pairForce
+    public agent_transmission
+    public agent_updatePosition
     
-    type :: agent
+    interface agent_init
+        module procedure initAgent
+    end interface
+    interface agent_tick
+        module procedure tick
+    end interface
+    
+    interface agent_pairForce
+        module procedure getPairForce
+    end interface
+    
+    interface agent_transmission
+        module procedure transmission
+    end interface
+    
+    interface agent_updatePosition
+        module procedure updatePosition
+    end interface
+    
+    type, public :: agent
         real(KIND=8), dimension(2) :: position
         real(KIND=8), dimension(2) :: velocity =(/0e0, 0e0 /)
         integer(KIND=1) :: state = HEALTHY! from -127 to 128
