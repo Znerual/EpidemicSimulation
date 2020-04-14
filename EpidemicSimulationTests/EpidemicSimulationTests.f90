@@ -15,7 +15,7 @@
     program EpidemicSimulationTests
     use unit_test
     use agentTools
-    use modell
+    use modell_module
     use konstanten
     use list_module
     implicit none
