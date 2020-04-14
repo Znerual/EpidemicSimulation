@@ -52,6 +52,7 @@
 		<File RelativePath=".\assert_mod.F90"/>
 		<File RelativePath=".\EpidemicSimulationTests.f90"/>
 		<File RelativePath="..\konstanten.f90"/>
+		<File RelativePath="..\list.f90"/>
 		<File RelativePath="..\modell.f90"/>
 		<File RelativePath=".\test_case_mod.F90"/>
 		<File RelativePath=".\test_common_mod.F90"/>

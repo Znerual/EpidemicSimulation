@@ -19,6 +19,7 @@ module agentTools
     public agent_pairForce
     public agent_transmission
     public agent_updatePosition
+    public agent_toString
     
     interface agent_init
         module procedure initAgent
@@ -38,7 +39,9 @@ module agentTools
     interface agent_updatePosition
         module procedure updatePosition
     end interface
-    
+    interface agent_toString
+        module procedure agent_toString
+    end interface
     type, public :: agent
         real(KIND=8), dimension(2) :: position
         real(KIND=8), dimension(2) :: velocity =(/0e0, 0e0 /)
@@ -64,7 +67,7 @@ module agentTools
         
         a%position = (/x * x_max, y*y_max/)
         a%velocity = (/ 0e0, 0e0/)
-        a%state = 1
+        a%state = HEALTHY
     end subroutine initAgent
     
     subroutine tick(a) !Probability to die should be implemented here (this could consider an age parameter as well)
@@ -133,5 +136,9 @@ module agentTools
         
         a%position = a%position + a%velocity
     end subroutine updatePosition
-    
+    character(64) function agent_toString(a)
+        type(agent), intent(in) :: a
+        write(agent_toString,'(F8.3 F8.3 F8.3 F8.3 I1.2 I2.4)') a%position(1), a%position(2), a%velocity(1),a%velocity(2), a%state, a%time_tick
+           
+    end function agent_toString
 end module agentTools

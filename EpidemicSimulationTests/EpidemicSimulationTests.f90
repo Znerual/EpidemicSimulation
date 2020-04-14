@@ -17,17 +17,19 @@
     use agentTools
     use modell
     use konstanten
+    use list_module
     implicit none
 
     ! Variables
-    type(test_suite_type) :: test_suite_a, test_suite_modell
-    type(agent), dimension(100) :: a
+    type(test_suite_type) :: test_suite_a, test_suite_modell, test_suite_liste
+    type(agent), target, dimension(100) :: a
     type(agent), dimension(:), pointer :: a_m
     integer :: i, j
     integer(kind=4) :: n_agents
     real n
     real(KIND=8) :: t1, t2
     real(KIND=8), dimension(2) :: f
+    type(list) :: l
     ! example with default suite
     call test_suite_init('agentToolsTest', test_suite_a)
 
@@ -184,21 +186,77 @@
     call assert_great_than(y_max - a(1)%position(2), 0e0_8 ,__FILE__,__LINE__,test_suite_a)
     call assert_great_than(a(1)%position(1), 0e0_8 ,__FILE__,__LINE__,test_suite_a)
     call assert_great_than(a(1)%position(2), 0e0_8 ,__FILE__,__LINE__,test_suite_a)
-    
-    ! report the complete suite
     call test_suite_report(suite=test_suite_a)
 
     call test_suite_final(suite=test_suite_a)
 
-    call test_suite_init('Modell Test', test_suite_modell)
-    call test_case_create('Modell Initialisieren - grid', test_suite_modell)
+    !!Test the modell
+    !call test_suite_init('Modell Test', test_suite_modell)
+    !call test_case_create('Modell Initialisieren - grid', test_suite_modell)
+    !
+    !call modell_init()
+    !call modell_information(agents=a_m, num_agents=n_agents)
+    !call assert_equal(size(a_m),n_agents ,__FILE__,__LINE__, test_suite_modell)
+    !call test_suite_report(suite=test_suite_modell)
+    !
+    !call test_suite_final(suite=test_suite_modell)
     
-    call modell_init()
-    call modell_information(agents=a_m, num_agents=n_agents)
-    call assert_equal(size(a_m),n_agents ,__FILE__,__LINE__, test_suite_modell)
-    call test_suite_report(suite=test_suite_modell)
-
-    call test_suite_final(suite=test_suite_modell)
+    !Test the list module
+    call test_suite_init('Listen Test', test_suite_liste)
+    call test_case_create('List Initialisieren', test_suite_liste)
+    do i = 1, 100
+        call add_element(a(i), l)
+    end do  
+    call assert_equal(agent_toString(get_agent(l)), agent_toString(a(100)), __FILE__,__LINE__, test_suite_liste)
+    call assert_equal(l%size, 100, __FILE__,__LINE__, test_suite_liste)
+    call test_case_create('Liste vergleichen', test_suite_liste)
+    do i = 0, 99
+        if( l%error) then
+            print*,__LINE__ ,  l%error_string, " bei i= ", i
+            exit
+        end if
+        call assert_equal(agent_toString(get_agent(l)), agent_toString(a(100-i)), __FILE__ ,i, test_suite_liste)
+        call next_element(l)
+        if( l%error) then
+            print*,__LINE__ ,  l%error_string, " bei i= ", i
+            exit
+        end if
+    end do
+    call assert_true(l%EOL, __FILE__,__LINE__, test_suite_liste)
+    call rewind_list(l)
+    call test_case_create('Element einzeln löschen', test_suite_liste)
+    call next_element(l)
+    do i = 0 , 98
+        call delete_current_element(l)
+        if (l%error) print*,__LINE__ ,  l%error_string, " bei i= ", i
+    end do
+    call assert_equal(agent_toString(get_agent(l)), agent_toString(a(100)), __FILE__,__LINE__, test_suite_liste)
+    call rewind_list(l)
+    do i = 1, 3
+        call add_element(a(100 - i), l)
+    end do
+    call test_case_create('Liste erneut vergleichen nach löschen', test_suite_liste)
+    call rewind_list(l)
+    do i = 97, 100
+        call assert_equal(agent_toString(get_agent(l)), agent_toString(a(i)), __FILE__ ,i, test_suite_liste)
+        call next_element(l)
+        if( l%error) then
+            print*,__LINE__ ,  l%error_string, " bei i= ", i
+            !exit
+        end if
+    end do
+    call test_case_create('Alle Elemente löschen', test_suite_liste)
+    call free_all_element(l)
+    call assert_equal(l%size, 0, __FILE__,__LINE__, test_suite_liste)
+    if( l%error) then
+        print*, l%error_string, " mit size ", l%size
+    end if
+    call assert_true(.not. associated(l%first), __FILE__,__LINE__, test_suite_liste)
+    call test_suite_report(suite=test_suite_liste)
+    call test_suite_final(suite=test_suite_liste)
     
+    
+    
+    !read(*,*) !To not close the console
     end program EpidemicSimulationTests
 

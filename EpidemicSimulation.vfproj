@@ -72,6 +72,7 @@
 		<File RelativePath=".\agent.f90"/>
 		<File RelativePath=".\EpidemicSimulation.f90"/>
 		<File RelativePath=".\konstanten.f90"/>
+		<File RelativePath=".\list.f90"/>
 		<File RelativePath=".\modell.f90"/></Filter>
 		<File RelativePath=".\ReadMe.txt"/></Files>
 	<Globals/></VisualStudioProject>
