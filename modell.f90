@@ -91,7 +91,7 @@ module modell_module
                 call add_element(a(i), m%overlap_grid(k, j, 2)) !topmost left corner
                 return
             else if (delta_y > b3) then
-                call add_element(a(i), m%overlap_grid(k, j, 4)) ! bottom left corner
+                call add_element(a(i), m%overlap_grid(k + 1, j, 2)) ! bottom left corner (4)
                 return
             end if
             if (delta_x < b1 .and. (delta_y > b2 .and. delta_y < b3)) then !left edge
@@ -103,8 +103,8 @@ module modell_module
             end if
         end if
         if (delta_x < b3) then
-            if  (delta_y > b4) then !bottom edge
-                call add_element(a(i), m%overlap_grid(k,j,5)) 
+            if  (delta_y > b4) then !bottom edge (5)
+                call add_element(a(i), m%overlap_grid(k + 1,j,1))  
                 return 
             else if (delta_y < b1) then !top edge
                 call add_element(a(i), m%overlap_grid(k,j,1)) 
@@ -115,15 +115,15 @@ module modell_module
             end if
         end if
         if (delta_x > b3) then
-            if (delta_y < b2) then !top right corner
-                call add_element(a(i), m%overlap_grid(k,j,8)) 
+            if (delta_y < b2) then !top right corner (8)
+                call add_element(a(i), m%overlap_grid(k,j + 1,2)) 
                 return 
-            else if (delta_y > b3) then !bottom right corner
-                call add_element(a(i), m%overlap_grid(k,j,6)) 
+            else if (delta_y > b3) then !bottom right corner (6)
+                call add_element(a(i), m%overlap_grid(k + 1,j + 1,2)) 
                 return 
             end if
-            if (delta_x > b4 .and (delta_y > b2 .and. delta_y < b3)) then !right edge
-                call add_element(a(i), m%overlap_grid(k,j,7)) 
+            if (delta_x > b4 .and (delta_y > b2 .and. delta_y < b3)) then !right edge (7)
+                call add_element(a(i), m%overlap_grid(k,j +1 ,3)) 
                 return 
             else
                 call add_element(a(i), m%grid(k,j)) !center grid
