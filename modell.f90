@@ -72,13 +72,11 @@ module modell_module
         m%error_string = ''
     end subroutine init_internal
     
-    subroutine setAgentInGrid(a1, gr, o_gr, m)
+    subroutine setAgentInGrid(a1, m)
         type(agent), intent(in) :: a1
-        type(agent), dimension(:,:) :: gr
-        type(agent), dimension(:,:,:) :: o_gr
         type(model) :: m
         real(KIND=8) :: width_x, width_y, delta_x, delta_y
-        real(KIND=8), parameter :: b1 = 1e0_8/6e0_8, b2 = 1e0_8/3e0_8, b3= 2e0_8/3e0_8, b4= 5e0_8/6e0_8 !Borders for grids
+        real(KIND=8), parameter :: b1 = 1e0_8/6e0_8, overlap_gridb2 = 1e0_8/3e0_8, b3= 2e0_8/3e0_8, b4= 5e0_8/6e0_8 !Borders for grids
         width_x = (1e0_8 * x_max) / m%n_grid_x !TODO Transfer the x_max into the modell type
         width_y = (1e0_8 * y_max) / m%n_grid_y
         
@@ -86,17 +84,54 @@ module modell_module
         k = a(i)%position(2) / width_y
         delta_x = (a(i)%position(1) - j * width_x) / width_x !Find the position inside one grid cell and normalice it, so that 1 means right border and 0 left border
         delta_y = (a(i)%position(2) - k * width_y) / width_y
-        !Find the right place for the element, either inside the main grid or inside the overlapping grid
+        !Find the right place for the element, either inside the main m%grid or inside the overlapping m%grid
         if (delta_x < b2) then
             !inside left most
             if (delta_y < b2) then
-                call add_element(a(i), overlap_grid(k, j, 2))
-                continue
+                call add_element(a(i), m%overlap_grid(k, j, 2)) !topmost left corner
+                return
+            else if (delta_y > b3) then
+                call add_element(a(i), m%overlap_grid(k, j, 4)) ! bottom left corner
+                return
             end if
-            if (delta_y > b3) then
-                call add_element(a(i), overlap_grid(k, j, 4)) ! not finished
+            if (delta_x < b1 .and. (delta_y > b2 .and. delta_y < b3)) then !left edge
+                call add_element(a(i), m%overlap_grid(k, j, 3))
+                return
+            else
+                call add_element(a(i), m%grid(k, j)) !center m%grid
+                return
             end if
         end if
+        if (delta_x < b3) then
+            if  (delta_y > b4) then !bottom edge
+                call add_element(a(i), m%overlap_grid(k,j,5)) 
+                return 
+            else if (delta_y < b1) then !top edge
+                call add_element(a(i), m%overlap_grid(k,j,1)) 
+                return
+            else !in the center, main grid
+                call add_element(a(i), m%grid(k,j))
+                return
+            end if
+        end if
+        if (delta_x > b3) then
+            if (delta_y < b2) then !top right corner
+                call add_element(a(i), m%overlap_grid(k,j,8)) 
+                return 
+            else if (delta_y > b3) then !bottom right corner
+                call add_element(a(i), m%overlap_grid(k,j,6)) 
+                return 
+            end if
+            if (delta_x > b4 .and (delta_y > b2 .and. delta_y < b3)) then !right edge
+                call add_element(a(i), m%overlap_grid(k,j,7)) 
+                return 
+            else
+                call add_element(a(i), m%grid(k,j)) !center grid
+                return
+            end if
+        end if
+        m%error = .true.
+        write(m%error_string, '(A)') 'setAgentinGrid error: couldn t place agent in grid' 
     end subroutine setAgentInGrid
     subroutine tick_default()
         print*, "Still to do"
