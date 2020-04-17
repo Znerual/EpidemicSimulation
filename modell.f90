@@ -10,6 +10,17 @@ module modell_module
     public modell_information
     public modell_finish
     
+    type, public :: modell
+        type(agent), dimension(:), allocatable :: a !List of agents
+        type(list), dimension(:,:), pointer, private :: grid 
+        type(list), dimension(:,:,:), pointer, private :: overlap_grid
+        integer(KIND=4) :: n_agents = 4000_4, n_grid_x, n_grid_y,n_per_grid = 50
+        character(len=64) :: error_string
+        character(len=64) :: warning_string
+        logical :: error
+        logical :: warning
+    end type modell
+    
     interface modell_init
         module procedure init_default
         module procedure init_n_agents
@@ -20,15 +31,16 @@ module modell_module
     end interface
     
     interface modell_information
-        subroutine information_agents(agents, num_agents, m)
+        module subroutine information_agents(agents, num_agents, m)
+            use agentTools
             type(agent), dimension(:), pointer :: agents
             integer(KIND=4) :: num_agents
-            type(modell) :: m
         end subroutine information_agents
-        subroutine information_grid(grid, overlaping_grid, m)
-            type(list), dimension(:,:), pointer :: grid
-            type(list), dimension(:,:,:), pointer :: overlaping_grid
-            type(modell) :: m
+        module subroutine information_grid(input_grid, input_overlap_grid, input_m)
+            use agentTools
+            type(list), dimension(:,:), pointer :: input_grid
+            type(list), dimension(:,:,:), pointer :: input_overlap_grid
+            type(modell) :: input_m
         end subroutine information_grid
     end interface
     
@@ -36,16 +48,7 @@ module modell_module
         module procedure finish_default
     end interface
     
-    type, public :: modell
-        type(agent), dimension(:), allocatable :: a !List of agents
-        type(list), dimension(:,:), allocatable, target, private :: grid 
-        type(list), dimension(:,:,:), allocatable, target, private :: overlap_grid
-        integer(KIND=4) :: n_agents = 4000_4, n_grid_x, n_grid_y,n_per_grid = 50
-        character(len=64) :: error_string
-        character(len=64) :: warning_string
-        logical :: error
-        logical :: warning
-    end type modell
+    
     
     integer :: i, j, k !For loops
     
@@ -87,12 +90,12 @@ module modell_module
             agents => m%a
             num_agents = m%n_agents
     end subroutine information_agents
-    subroutine information_grid(grid, overlaping_grid, m)
-            type(list), dimension(:,:), pointer :: grid
-            type(list), dimension(:,:,:), pointer :: overlaping_grid
-            type(modell) :: m
-            grid => m%grid
-            overlaping_grid => m%overlaping_grid
+    subroutine information_grid(input_grid, input_overlap_grid, input_m)
+            type(list), dimension(:,:), pointer :: input_grid
+            type(list), dimension(:,:,:), pointer :: input_overlap_grid
+            type(modell) :: input_m
+            input_grid => input_m%grid
+            input_overlap_grid => input_m%overlap_grid
         end subroutine information_grid
     subroutine setAgentInGrid(a1, m)
         type(agent), intent(in) :: a1
@@ -110,45 +113,45 @@ module modell_module
         if (delta_x < b2) then
             !inside left most
             if (delta_y < b2) then
-                call add_element(a1, m%overlap_grid(k, j, 2)) !topmost left corner
+                !call add_element(a1, m%overlap_grid(k, j, 2)) !topmost left corner
                 return
             else if (delta_y > b3) then
-                call add_element(a1, m%overlap_grid(k + 1, j, 2)) ! bottom left corner (4)
+                !call add_element(a1, m%overlap_grid(k + 1, j, 2)) ! bottom left corner (4)
                 return
             end if
             if (delta_x < b1 .and. (delta_y > b2 .and. delta_y < b3)) then !left edge
-                call add_element(a1, m%overlap_grid(k, j, 3))
+                !call add_element(a1, m%overlap_grid(k, j, 3))
                 return
             else
-                call add_element(a1, m%grid(k, j)) !center m%grid
+                !call add_element(a1, m%grid(k, j)) !center m%grid
                 return
             end if
         end if
         if (delta_x < b3) then
             if  (delta_y > b4) then !bottom edge (5)
-                call add_element(a1, m%overlap_grid(k + 1,j,1))  
+                !call add_element(a1, m%overlap_grid(k + 1,j,1))  
                 return 
             else if (delta_y < b1) then !top edge
-                call add_element(a1, m%overlap_grid(k,j,1)) 
+                !call add_element(a1, m%overlap_grid(k,j,1)) 
                 return
             else !in the center, main grid
-                call add_element(a1, m%grid(k,j))
+                !call add_element(a1, m%grid(k,j))
                 return
             end if
         end if
         if (delta_x > b3) then
             if (delta_y < b2) then !top right corner (8)
-                call add_element(a1, m%overlap_grid(k,j + 1,2)) 
+                !call add_element(a1, m%overlap_grid(k,j + 1,2)) 
                 return 
             else if (delta_y > b3) then !bottom right corner (6)
-                call add_element(a1, m%overlap_grid(k + 1,j + 1,2)) 
+                !call add_element(a1, m%overlap_grid(k + 1,j + 1,2)) 
                 return 
             end if
             if (delta_x > b4 .and. (delta_y > b2 .and. delta_y < b3)) then !right edge (7)
-                call add_element(a1, m%overlap_grid(k,j +1 ,3)) 
+                !call add_element(a1, m%overlap_grid(k,j +1 ,3)) 
                 return 
             else
-                call add_element(a1, m%grid(k,j)) !center grid
+                !call add_element(a1, m%grid(k,j)) !center grid
                 return
             end if
         end if

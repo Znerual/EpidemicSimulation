@@ -23,28 +23,28 @@
     ! Variables
     type(test_suite_type) :: test_suite_a, test_suite_modell, test_suite_liste
     type(agent), target, dimension(100) :: a
-    type(agent), dimension(:), pointer :: a_m
-    integer :: i, j
-    integer(kind=4) :: n_agents
-    real n
-    real(KIND=8) :: t1, t2
-    real(KIND=8), dimension(2) :: f
-    type(list) :: l
-    type(modell) :: m
+    
+    
+    
+   
     ! example with default suite
     call agentTests()
-    call listTests()
-    call modellTests()
+    !call listTests()
+    !call modellTests()
     !read(*,*) !To not close the console
-   
+    end program EpidemicSimulationTests
 
-    subroutine agentTests()
+subroutine agentTests()
     use konstanten
     use agentTools
     use unit_test
     implicit none
         type(agent), target, dimension(100) :: a
         type(test_suite_type) :: test_suite_a
+        real(KIND=8), dimension(2) :: f
+        real n
+        real(KIND=8) :: t1, t2
+        integer :: i,j
         call test_suite_init('agentToolsTest', test_suite_a)
 
 
@@ -206,7 +206,19 @@
     end subroutine agentTests
    
     subroutine listTests
+        use agentTools
+        use list_module
+        use unit_test
         implicit none
+        type(test_suite_type) :: test_suite_liste
+        type(agent), target, dimension(100) :: a
+        type(list) :: l
+        integer :: i
+        
+        !Initialice the agents
+        do i = 1, 100
+            call agent_init(a(i))
+        end do
         !Test the list module
         call test_suite_init('Listen Test', test_suite_liste)
         call test_case_create('List Initialisieren', test_suite_liste)
@@ -261,9 +273,19 @@
         call test_suite_report(suite=test_suite_liste)
         call test_suite_final(suite=test_suite_liste)
     end subroutine listTests
+    
+    
+    
     subroutine modellTests
+        use unit_test
+        use modell_module
         implicit none
      !Test the modell
+        type(modell) :: m
+        type(test_suite_type) :: test_suite_modell
+        type(agent), dimension(:), pointer :: a_m   
+        integer(kind=4) :: n_agents
+        
         call test_suite_init('Modell Test', test_suite_modell)
         call test_case_create('Modell Initialisieren - grid', test_suite_modell)
         m%n_per_grid = 5
@@ -279,4 +301,4 @@
     
         call test_suite_final(suite=test_suite_modell)
     end subroutine modellTests
-     end program EpidemicSimulationTests
+     
