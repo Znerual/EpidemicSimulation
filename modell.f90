@@ -7,7 +7,8 @@ module modell_module
     private
     public modell_init
     public modell_tick
-    public modell_information
+    public modell_information_agents
+    public modell_information_grid
     public modell_finish
     
     type, public :: modell
@@ -30,20 +31,8 @@ module modell_module
         module procedure tick_default
     end interface
     
-    interface modell_information
-        module subroutine information_agents(agents, num_agents, m)
-            use agentTools
-            type(agent), dimension(:), pointer :: agents
-            integer(KIND=4) :: num_agents
-        end subroutine information_agents
-        module subroutine information_grid(input_grid, input_overlap_grid, input_m)
-            use agentTools
-            type(list), dimension(:,:), pointer :: input_grid
-            type(list), dimension(:,:,:), pointer :: input_overlap_grid
-            type(modell) :: input_m
-        end subroutine information_grid
-    end interface
     
+      
     interface modell_finish
         module procedure finish_default
     end interface
@@ -83,20 +72,20 @@ module modell_module
         m%warning_string = ''
         m%error_string = ''
     end subroutine init_internal
-    subroutine information_agents(agents, num_agents, m)
-            type(agent), dimension(:), pointer :: agents
+    subroutine modell_information_agents(agents, num_agents, m)
+            type(agent), dimension(:) :: agents
             integer(KIND=4) :: num_agents
             type(modell) :: m
-            agents => m%a
+            agents = m%a
             num_agents = m%n_agents
-    end subroutine information_agents
-    subroutine information_grid(input_grid, input_overlap_grid, input_m)
+    end subroutine modell_information_agents
+    subroutine modell_information_grid(input_grid, input_overlap_grid, input_m)
             type(list), dimension(:,:), pointer :: input_grid
             type(list), dimension(:,:,:), pointer :: input_overlap_grid
             type(modell) :: input_m
             input_grid => input_m%grid
             input_overlap_grid => input_m%overlap_grid
-        end subroutine information_grid
+        end subroutine modell_information_grid
     subroutine setAgentInGrid(a1, m)
         type(agent), intent(in) :: a1
         type(modell) :: m
@@ -167,13 +156,13 @@ module modell_module
         deallocate(m%a)
         do i = 1, m%n_grid_x
             do j = 1, m%n_grid_y
-                call free_all_elements(m%grid(i,j))
+                call free_all_element(m%grid(i,j))
                 if (m%grid(i,j)%error) then
                     m%error = .true.
                     write(m%error_string, '(A)') "finish default error ", m%grid(i,j)%error_string, " occured."
                 end if
                 do k = 1, 3
-                    call free_all_elements(m%overlap_grid(i,j,k))
+                    call free_all_element(m%overlap_grid(i,j,k))
                     if (m%overlap_grid(i,j,k)%error) then
                          m%error = .true.
                          write(m%error_string, '(A)') "finish default error ", m%overlap_grid(i,j,k)%error_string, " occured."
