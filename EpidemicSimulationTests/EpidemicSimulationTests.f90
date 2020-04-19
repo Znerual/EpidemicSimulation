@@ -30,7 +30,7 @@
     ! example with default suite
     call agentTests()
     call listTests()
-    !call modellTests()
+    call modellTests()
     !read(*,*) !To not close the console
     end program EpidemicSimulationTests
 
@@ -205,7 +205,7 @@ subroutine agentTests()
         call test_suite_final(suite=test_suite_a)
     end subroutine agentTests
    
-    subroutine listTests
+subroutine listTests
         use agentTools
         use list_module
         use unit_test
@@ -273,10 +273,9 @@ subroutine agentTests()
         call test_suite_report(suite=test_suite_liste)
         call test_suite_final(suite=test_suite_liste)
     end subroutine listTests
+  
     
-    
-    
-    subroutine modellTests
+subroutine modellTests
         use unit_test
         use modell_module
         use agentTools
@@ -284,7 +283,7 @@ subroutine agentTests()
      !Test the modell
         type(modell) :: m
         type(test_suite_type) :: test_suite_modell
-        type(agent), dimension(:),allocatable :: a_m   
+        type(agent), dimension(:), pointer:: a_m   
         integer(kind=4) :: n_agents
         
         call test_suite_init('Modell Test', test_suite_modell)
@@ -292,11 +291,13 @@ subroutine agentTests()
         m%n_per_grid = 5
         m%n_agents = 15
         call modell_init(m)
-        call assert_equal(m%n_grid_x, 3,__FILE__,__LINE__, test_suite_modell)
-        call assert_equal(m%n_grid_y, 3,__FILE__,__LINE__, test_suite_modell)
+        call assert_equal(m%n_grid_x, 2,__FILE__,__LINE__, test_suite_modell)
+        call assert_equal(m%n_grid_y, 2,__FILE__,__LINE__, test_suite_modell)
     
         call modell_information_agents(a_m, n_agents,m)
         call assert_equal(size(a_m),n_agents ,__FILE__,__LINE__, test_suite_modell)
+        
+        !test the position of the agents in the grid
         call modell_finish(m)
         call test_suite_report(suite=test_suite_modell)
     

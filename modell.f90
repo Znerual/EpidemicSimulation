@@ -12,11 +12,11 @@ module modell_module
     public modell_finish
     
     type, public :: modell
-        type(agent), dimension(:), allocatable :: a !List of agents
+        type(agent), dimension(:), pointer:: a !List of agents
         type(list), dimension(:,:), pointer, private :: grid 
         type(list), dimension(:,:,:), pointer, private :: overlap_grid
         integer(KIND=4) :: n_agents = 4000_4, n_grid_x, n_grid_y,n_per_grid = 50
-        character(len=64) :: error_string
+        character(len=1024) :: error_string
         character(len=64) :: warning_string
         logical :: error
         logical :: warning
@@ -73,10 +73,10 @@ module modell_module
         m%error_string = ''
     end subroutine init_internal
     subroutine modell_information_agents(agents, num_agents, m)
-            type(agent), dimension(:) :: agents
+            type(agent), dimension(:), pointer :: agents
             integer(KIND=4) :: num_agents
             type(modell) :: m
-            agents = m%a
+            agents => m%a
             num_agents = m%n_agents
     end subroutine modell_information_agents
     subroutine modell_information_grid(input_grid, input_overlap_grid, input_m)
@@ -94,53 +94,53 @@ module modell_module
         width_x = (1e0_8 * x_max) / m%n_grid_x !TODO Transfer the x_max into the modell type
         width_y = (1e0_8 * y_max) / m%n_grid_y
         
-        j = a1%position(1) / width_x
-        k = a1%position(2) / width_y
+        j = a1%position(1) / width_x +1
+        k = a1%position(2) / width_y +1
         delta_x = (a1%position(1) - j * width_x) / width_x !Find the position inside one grid cell and normalice it, so that 1 means right border and 0 left border
         delta_y = (a1%position(2) - k * width_y) / width_y
         !Find the right place for the element, either inside the main m%grid or inside the overlapping m%grid
         if (delta_x < b2) then
             !inside left most
             if (delta_y < b2) then
-                !call add_element(a1, m%overlap_grid(k, j, 2)) !topmost left corner
+                call add_element(a1, m%overlap_grid(k, j, 2)) !topmost left corner
                 return
             else if (delta_y > b3) then
-                !call add_element(a1, m%overlap_grid(k + 1, j, 2)) ! bottom left corner (4)
+                call add_element(a1, m%overlap_grid(k + 1, j, 2)) ! bottom left corner (4)
                 return
             end if
             if (delta_x < b1 .and. (delta_y > b2 .and. delta_y < b3)) then !left edge
-                !call add_element(a1, m%overlap_grid(k, j, 3))
+                call add_element(a1, m%overlap_grid(k, j, 3))
                 return
             else
-                !call add_element(a1, m%grid(k, j)) !center m%grid
+                call add_element(a1, m%grid(k, j)) !center m%grid
                 return
             end if
         end if
         if (delta_x < b3) then
             if  (delta_y > b4) then !bottom edge (5)
-                !call add_element(a1, m%overlap_grid(k + 1,j,1))  
+                call add_element(a1, m%overlap_grid(k + 1,j,1))  
                 return 
             else if (delta_y < b1) then !top edge
-                !call add_element(a1, m%overlap_grid(k,j,1)) 
+                call add_element(a1, m%overlap_grid(k,j,1)) 
                 return
             else !in the center, main grid
-                !call add_element(a1, m%grid(k,j))
+                call add_element(a1, m%grid(k,j))
                 return
             end if
         end if
         if (delta_x > b3) then
             if (delta_y < b2) then !top right corner (8)
-                !call add_element(a1, m%overlap_grid(k,j + 1,2)) 
+                call add_element(a1, m%overlap_grid(k,j + 1,2)) 
                 return 
             else if (delta_y > b3) then !bottom right corner (6)
-                !call add_element(a1, m%overlap_grid(k + 1,j + 1,2)) 
+                call add_element(a1, m%overlap_grid(k + 1,j + 1,2)) 
                 return 
             end if
             if (delta_x > b4 .and. (delta_y > b2 .and. delta_y < b3)) then !right edge (7)
-                !call add_element(a1, m%overlap_grid(k,j +1 ,3)) 
+                call add_element(a1, m%overlap_grid(k,j +1 ,3)) 
                 return 
             else
-                !call add_element(a1, m%grid(k,j)) !center grid
+                call add_element(a1, m%grid(k,j)) !center grid
                 return
             end if
         end if
@@ -153,23 +153,24 @@ module modell_module
     
     subroutine finish_default(m)
         type(modell) :: m
-        deallocate(m%a)
+        
         do i = 1, m%n_grid_x
             do j = 1, m%n_grid_y
                 call free_all_element(m%grid(i,j))
                 if (m%grid(i,j)%error) then
                     m%error = .true.
-                    write(m%error_string, '(A)') "finish default error ", m%grid(i,j)%error_string, " occured."
+                    write(m%error_string, '(A)') "finish default error " // trim(m%grid(i,j)%error_string) // " occured."
                 end if
                 do k = 1, 3
                     call free_all_element(m%overlap_grid(i,j,k))
                     if (m%overlap_grid(i,j,k)%error) then
                          m%error = .true.
-                         write(m%error_string, '(A)') "finish default error ", m%overlap_grid(i,j,k)%error_string, " occured."
+                         write(m%error_string, '(A)') "finish default error " // trim(m%overlap_grid(i,j,k)%error_string) // " occured."
                     end  if
                 end do
             end do
         end do
+        deallocate(m%a)
         deallocate(m%grid)
         deallocate(m%overlap_grid)
     end subroutine finish_default

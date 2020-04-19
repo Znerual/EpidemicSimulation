@@ -93,14 +93,18 @@ module list_module
         integer :: i
         if(.not. associated(l%current)) then 
             l%error = .true.
+            l%EOL = .true.
             write(l%error_string, '(A)') 'List-error: current node not allocated'
             return
         end if
-        if (l%size == 1 .or. associated(l%current, l%first)) then !Only one element in list or delete the first element
+        if (l%size == 1 .or. associated(l%current, l%first) .and. l%size >= 1) then !Only one element in list or delete the first element
             tmp_f => l%first%next
             deallocate(l%first)
-            l%first => tmp_f
+            
             l%size = l%size - 1
+            if (l%size <= 0) l%EOL =  .true.
+            l%first => tmp_f
+            l%current => l%first
             return
         end if
         tmp_old => l%first
@@ -140,7 +144,8 @@ module list_module
         type(node), pointer :: tmp
         if (.not. associated(l%first)) then
             l%error =.true.
-            write(l%error_string, '(A)') 'List-error: delete first no first element'
+            l%EOL = .true.
+            write(l%error_string, '(A)') 'List-error: delete first element no first element'
             return
         end if
         
@@ -148,7 +153,7 @@ module list_module
         deallocate(l%first)
         l%first => tmp%next
         
-        if (l%size == 0) then
+        if (l%size <= 0) then
             l%EOL = .true.
         else
             l%size = l%size - 1
@@ -193,7 +198,7 @@ module list_module
         type(list) :: l
         call rewind_list(l)
         do while(l%EOL .eqv. .false.)
-            call delete_first_element(l)
+            call delete_current_element(l)
         end do
         if (l%size /= 0) then
             l%error = .true.
