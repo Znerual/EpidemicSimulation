@@ -153,7 +153,7 @@ module list_module
         deallocate(l%first)
         l%first => tmp%next
         
-        if (l%size <= 0) then
+        if (l%size <= 1) then
             l%EOL = .true.
         else
             l%size = l%size - 1
